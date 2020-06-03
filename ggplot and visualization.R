@@ -1,6 +1,6 @@
 ####Setup####
 
-#Actitavte Library 
+#Activate Library 
   library(tidyverse)
   library(essurvey)
   library(car)
@@ -77,7 +77,7 @@
    group_by(gender,country) %>%
     summarize(eff_int_mean =mean(eff_int, na.rm=T),
               se = std.error(eff_int, na.rm=T))%>%
-    filter(gender!="No answer") %>% 
+    filter(gender!="No answer")%>% 
     ggplot()+
       aes(x=gender, y=eff_int_mean, ymin=eff_int_mean-1.96*se, ymax=eff_int_mean+1.96*se)+
       geom_col()+
@@ -95,10 +95,9 @@
   
   DATA %>% 
     group_by(country,gender) %>%
-    summarize(eff_ext_mean = mean(eff_ext, na.rm = T),
-              eff_int_mean =mean(eff_int, na.rm=T))  %>%
-    pivot_wider(names_from = gender, values_from = c(eff_ext_mean, eff_int_mean)) %>%
-    summarize(int_gap = eff_int_mean_Male - eff_int_mean_Female) %>%
+    summarize(eff_int_mean =mean(eff_int, na.rm=T))%>%
+    pivot_wider(names_from = gender, values_from = c(eff_int_mean))%>%
+    summarize(int_gap = Male - Female) %>%
     arrange(-int_gap) %>%
     ggplot()+
       aes(x=reorder(country, -int_gap),y=int_gap)+
@@ -114,7 +113,7 @@
   #Calculate general difference in means test using the t.test command and tidy from broom for a nice data frame
   DATA %>%
     filter(gender!="No answer")%>%
-    select(gender,eff_int) %>%
+    select(gender,eff_int)%>%
     do(tidy(t.test(eff_int ~ gender, data=.)))
   
   #Do this again for each country
@@ -167,6 +166,12 @@
     
 
     
+    
+    
+    
+    
+    
+
 ####Line graphs - gender gap,income and interest in Germany over the years####
   ####*Setup####
   #Download data 
@@ -205,7 +210,7 @@
    DATA.simple %>%
     mutate(gender=as_factor(gndr))%>%
     group_by(essround,gender)%>%
-    summarize(interest=mean(polintr, na.rm=T)-1) %>%
+    summarize(interest=mean(polintr, na.rm=T)-1)%>%
     ggplot()+
       aes(x=essround, y=interest, color=gender)+
       geom_line()+
@@ -215,7 +220,18 @@
   
   
 
-  
+  ####*More Complex Graph - Political interest by income over time in Germany####
+   DATA.simple %>%
+    mutate(hincfel=as_factor(hincfel))%>%
+    group_by(essround,hincfel)%>%
+    summarize(interest=mean(polintr, na.rm=T)-1) %>%
+    filter(!is.na(hincfel))%>%
+    ggplot()+
+      aes(x=essround, y=interest, group=hincfel, color=hincfel)+
+      geom_line()+
+      ylim(0,3)+
+      theme_bw()+
+      labs(x="Ess Round",y="Political Interest",title="Political Interest in Germany")
   
   
   
@@ -228,27 +244,40 @@
     
   
   
-####*Bonus - Make a map####
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+####*Bonus - Make a highlightable map####
   
   ##Calculate average eficacy by country####
     data.temp<-
         DATA %>%
         group_by(cntry)%>%
-        summarise(meanpunish=mean(eff_int, na.rm=T)) %>%
+        summarise(eff_int=mean(eff_int, na.rm=T)) %>%
         filter(!is.na(cntry))
 
 
-  ##Load additional packages for maps
-    needs(maps)
-    needs(viridis)    
+  ##Load additional packages for maps and highlights
+    library(maps) #maps
+    library(viridis)    #For theme
+    library(plotly) #highlights 
+    library(crosstalk) #highlights
     
     #Get Map data
     world_map <- map_data("world")
-    
-    #Limit to European/ESS countries through zoom later
 
-    eu_map <- map_data("world")
-    
     #Read in the country code conversion 
     countrycodes<-read.csv("countrycodes.csv")
     names(countrycodes)<-c("region","cntry")
@@ -257,20 +286,29 @@
     data.temp<-inner_join(data.temp,countrycodes)
     
     #Merge data into map
-    eu_map_punish <- right_join(data.temp, eu_map, by = "region")
+    eu_map_eff_int <- right_join(data.temp, world_map, by = "region")
     
-    eu_map_punish <- SharedData$new(eu_map_punish, ~cntry)
+    eu_map_eff_int <- SharedData$new(eu_map_eff_int, ~cntry)
 
     
-    
-    figure5<-ggplot(eu_map_punish, aes(long, lat, group = group))+
-      geom_polygon(aes(fill = meanpunish ), color = "white")+
+    #Generate Map
+    figure_map<-ggplot(eu_map_eff_int, aes(long, lat, group = group))+
+      geom_polygon(aes(fill = eff_int ), color = "white")+
+       coord_fixed(xlim = c(-10, 30),  ylim = c(36, 72), ratio = 1.3)+
       theme(legend.position = "none")+
-      scale_fill_continuous(high = "#132B43", low = "#56B1F7") +
+      scale_fill_continuous(high = "#132B43", low = "#56B1F7")+
       theme_bw() +
-      xlab("")+ylab("")+
-      coord_fixed(xlim = c(-10, 30),  ylim = c(36, 72), ratio = 1.3)
+      xlab("")+ylab("")
+
   
+    #Show map
+    figure_map
+    
+    #Create interactive map using plotly
+    ggplotly(figure_map,tooltip = "fill", height = 700, width= 700) %>% 
+       layout(xaxis = list(automargin=TRUE, showgrid = F,  showticklabels=F , ticks=""), 
+              yaxis = list(automargin=TRUE, showgrid = F,  showticklabels=F , ticks="")) %>%
+      config(displayModeBar = F) 
   
 
   

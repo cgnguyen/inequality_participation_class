@@ -6,7 +6,7 @@
   install.packages("car")
   install.packages("haven")
   
-  #Actitavte Library 
+  #Activate Library 
   library(tidyverse)
   library(essurvey)
   library(car)
@@ -26,7 +26,6 @@
   
     
 ####Exploring Data####
-  
   #External Efficacy
   DATA$psppipl
   
@@ -38,7 +37,6 @@
     select(psppipl,cptppol) %>%
     summary(.)
   
-  
 ####Rename Data####
   DATA$eff_ext<-DATA$psppipl
   
@@ -48,16 +46,12 @@
     select(eff_int,eff_ext) %>%
     summary(.)
   
-  
 ####Clean Data####
-  
   DATA$country<-as_factor(DATA$cntry)
   summary(DATA$country)
   
   DATA$gndr
-  
   DATA$gender<-as_factor(DATA$gndr)
-  
   
 ####Descriptive Statistics by groups####
   
