@@ -8,7 +8,6 @@
     library(stargazer)
     library(texreg)
     library(sjPlot)
-   
 
   ####*Data into R####
     #Set your own email with set_email("")
@@ -206,18 +205,38 @@
   
   stargazer(mod_1,mod_2,mod_4, type="text")
   
-  stargazer(mod_1,mod_2,mod_4, type="html",
+  stargazer(mod_1,mod_2,mod_4, type="text",
             covariate.labels = c("Gender", "Student","Unemployed","Sick","Retired","Other Activity","Housework etc.",
                                  "Age", "High Income","Low Income","Years of Education","Intercept"))
   
-  stargazer(mod_1,mod_2,mod_4, type="htmlreg",
+  stargazer(mod_1,mod_2,mod_4, type="html",
             covariate.labels = c("Gender", "Student","Unemployed","Sick","Retired","Other Activity","Housework etc.",
                                  "Age", "High Income","Low Income","Years of Education","Intercept"),
             out= "results_stargazer.html")
   
   
   ####*Visual Representations####
+  plot_models(mod_4)
   
+  plot_models(mod_4,
+              axis.labels = c("High Income","Low Income",
+                              "Age","Housework","Other Activity","Retired","Sick or Disabled",
+                              "Unemplyed","Student","Female","Years of Education"))+
+    theme_bw()+
+    geom_hline(mapping=aes(yintercept=0), color="black", linetype="dashed")+
+    labs(x="Variables", title="Model Estimates")
+                 
+
+
+    
+  plot_models(mod_4,mod_2,
+              axis.labels = c("High Income","Low Income",
+                              "Age","Housework","Other Activity","Retired","Sick or Disabled",
+                              "Unemplyed","Student","Female","Years of Education"))+
+    theme_bw()+
+    geom_hline(mapping=aes(yintercept=0), color="black", linetype="dashed")+
+    labs(x="Variables", title="Model Estimates")
+
   
   
 ####Expansion 1: Country Fixed Effects####
