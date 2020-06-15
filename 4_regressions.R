@@ -42,7 +42,6 @@
   #Education
   DATA$education<-as.numeric(DATA$eduyrs)
 
-
   #Age
   DATA$age<-as.numeric(DATA$agea)
   
@@ -123,8 +122,39 @@
 
   #Regression Model
   summary(lm(y~x))
+  
+  ###Bias or missing variables 
+  
+  #Missing variable 
+  z<-runif(1000, min=-10, max=10)
+  
+   
+  #New "real y# 
+  y_real<-(2*x)+(40*z)
+  
+  #Generate observed variables
+  y<-y_real+error+intercept
+  
+  summary(lm(y~x))
 
-####Bivariate Regression: Internal Efficacy and Gender####
+  
+  
+  
+
+####Bivariate Regression: Internal Efficacy and Education####
+    
+  DATA %>%
+    filter(!is.na(eff_int))%>%
+    filter(!is.na(education))%>%
+    sample_frac(0.1)%>%
+    ggplot()+
+      aes(x=education, y=eff_int)+
+      geom_point(alpha=0.5, size=1, position="jitter")+
+    theme_bw()
+  
+  
+  
+  
   mod_1<-lm(eff_int~education, data=DATA)
   
   summary(mod_1)
@@ -161,7 +191,7 @@
       DATA%>%
         select(gender,education,eff_int)%>%
         drop_na()%>%
-        cbind(., pred=predict(mod_3))%>%
+        cbind(., pred=predict(mod_2))%>%
         sample_frac(0.2) %>%
         ggplot()+
           aes(x=education, y=eff_int, color=gender)+
@@ -171,7 +201,7 @@
   
 ####Multivariate Regression 2: Socio-demographic Controls####
   #Version 1
-  mod_3<-lm(eff_int ~ education + gender+ activity + age+ education + income, data= DATA)
+  mod_3<-lm(eff_int ~ education + gender+ activity + age+ income, data= DATA)
   
   summary(mod_3)
       
@@ -191,6 +221,7 @@
               c("Intercept","Years of Education","Age","Female",
                 "Student","Unemployed","Sick","Retired","Other Activity","Housework etc.",
                 "High Income","Low Income"))
+  
   #Export to html 
   htmlreg(list(mod_1,mod_2,mod_4),
             custom.coef.names = 
@@ -249,6 +280,8 @@
   #Education and gender
   mod_6<-lm(eff_int ~ + education * gender+ activity + age + income_simple+country, data= DATA)
   
+  summary(mod_6)
+  
   #Education and the country
   mod_7<-lm(eff_int ~ + education * country + gender+ activity + age + income_simple, data= DATA)
 
@@ -263,7 +296,7 @@
              data= DATA,
              family=binomial(link = "logit"))
   summary(mod_9)
-  summary(mod_9)
+
 
 
   
